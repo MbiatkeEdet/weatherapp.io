@@ -47,7 +47,7 @@ export default (await import("vue")).defineComponent({
 
 <style>
 body {
-  background-color: aqua;
+  background-color: none;
 }
 .header {
   background-color: rgb(59, 122, 59);
