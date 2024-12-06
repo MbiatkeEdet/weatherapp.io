@@ -4,14 +4,15 @@
       <div class="card main-div w-100">
         <div class="p-3">
           <h2 class="mb-1 day">Today</h2>
-          <p class="text-light date mb-0">{{ Date }}</p>
+          <p class="text-bold date mb-0">{{ date }}</p>
           <small>{{ time }}</small>
           <h2 class="place">
-            {{ name }}<small>{{ country }}</small>
+            {{ name }}<small>, {{ country }}</small>
           </h2>
           <div class="temp">
-            <h1 class="weather-temp">{{ temperature }}&deg;</h1>
-            <h2 class="text-light">{{description}}</h2>
+            <h1 class="weather-temp">{{ temperature }}&deg;C</h1>
+            <h2 class="text-bold">{{ description }}</h2>
+            <img v-if="iconUrl" :src="iconUrl" alt="Weather Icon" />
           </div>
         </div>
       </div>
@@ -21,27 +22,27 @@
         <tbody>
           <tr>
             <th>Sea Level</th>
-            <td>{{ sea_level }}</td>
+            <td>{{ sea_level ? sea_level + " m" : "N/A" }}</td>
           </tr>
           <tr>
             <th>Humidity</th>
-            <td>{{ humidity }}</td>
+            <td>{{ humidity }}%</td>
           </tr>
           <tr>
             <th>Wind</th>
-            <td>{{ wind }}</td>
+            <td>{{ wind }} m/s</td>
           </tr>
         </tbody>
       </table>
 
-      <DaysWeather :cityname="cityname"></DaysWeather>
+      <DaysWeather :cityname="cityname" />
 
       <div id="div_Form" class="d-flex m-3 justify-content-center">
-        <form action="">
+        <form>
           <input
             type="button"
             value="Change Location"
-            class="btn change-btn btn-primary"
+            class="btn btn-primary change-btn"
           />
         </form>
       </div>
@@ -49,12 +50,13 @@
   </div>
 </template>
 
+
 <script>
 import axios from "axios";
 import DaysWeather from "./DaysWeather.vue";
 
-export default (await import("vue")).defineComponent({
-  name: "myWeather",
+export default {
+  name: "MyWeather",
   components: {
     DaysWeather,
   },
@@ -92,26 +94,30 @@ export default (await import("vue")).defineComponent({
   },
 
   async created() {
-    const response = await axios.get(
-      `https://api.openweathermap.org/data/2.5/weather?q=${this.city}&units=metric&appid=3988d0b06a0c39602b5cec937020a31c`
-    );
-    const weatherData = response.data;
-    this.temperature = Math.round(weatherData.main.temp);
-    this.description = weatherData.weather[0].description;
-    this.name = weatherData.name;
-    this.wind = weatherData.wind.speed;
-    this.sea_level = weatherData.main.sea_level;
-    this.country = weatherData.sys.country;
-    this.humidity = weatherData.main.humidity;
-    this.iconUrl = `https://api.openweathermap.org/img/${weatherData.weather[0].icon}.png`;
-    const d = new Date();
-    this.time = d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
-    this.date =
-      d.getDate() + "-" + this.monthNames[d.getMonth] + "-" + d.getFullYear();
-    console.log(this.iconUrl);
+    try {
+      const response = await axios.get(
+        `https://api.openweathermap.org/data/2.5/weather?q=${this.city}&units=metric&appid=3988d0b06a0c39602b5cec937020a31c`
+      );
+      const weatherData = response.data;
+      this.temperature = Math.round(weatherData.main.temp);
+      this.description = weatherData.weather[0].description;
+      this.name = weatherData.name;
+      this.wind = weatherData.wind.speed;
+      this.sea_level = weatherData.main.sea_level || null; // Handle unavailable sea level
+      this.country = weatherData.sys.country;
+      this.humidity = weatherData.main.humidity;
+      this.iconUrl = `https://openweathermap.org/img/wn/${weatherData.weather[0].icon}.png`;
+      
+      const now = new Date();
+      this.time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      this.date = `${now.getDate()} ${this.monthNames[now.getMonth()]} ${now.getFullYear()}`;
+    } catch (error) {
+      console.error("Error fetching weather data:", error);
+    }
   },
-});
+};
 </script>
+
 
 <style>
 body {
@@ -129,79 +135,60 @@ h2.mb-1.day {
 .main-div {
   border-radius: 25px;
   color: #fff;
-  background-image: url();
+  background-color: #1e2a38;
   background-size: cover;
   background-position: center;
   background-blend-mode: overlay;
   background-repeat: no-repeat;
 }
 .temp {
-  position: absolute;
-  bottom: 0;
+  position: relative;
+  bottom: 10px;
 }
 .main-div:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
   transition: transform 0.5s ease;
-  z-index: 1;
 }
 .card-2 {
   background-color: aquamarine;
   border-radius: 25px;
+  padding: 1rem;
 }
 h2,
 p {
-  padding: 0 2px 0;
-}
-.card-details {
-  margin-left: 19px;
-}
-.h1_left {
-  position: absolute;
-  bottom: 30px;
-  left: 16px;
-  font-size: 4vw;
-  line-height: 1.2;
-}
-.h3_left {
-  position: absolute;
-  left: 16px;
-  font-size: 4vw;
-  line-height: 0.5;
-}
-.h3_left small {
-  font-size: 1rem;
+  margin: 0 5px;
 }
 table {
-  position: relative;
-  left: 15px;
-  border-collapse: separate;
-  border-spacing: 15px;
-  width: 85px;
   margin: 0 auto;
+  width: 100%;
   max-width: 600px;
+  border-spacing: 10px;
 }
-
 th,
 td {
-  font-size: 18px;
-  color: blue;
+  font-size: 1rem;
+  text-align: left;
+  padding: 5px;
+  color: #333;
 }
-table,
-tr:hover {
-  color: antiquewhite;
+tr:hover td {
+  color: #007bff;
 }
-td {
-  text-align: right;
-}
-.change_btn {
+.change-btn {
   background-image: linear-gradient(to right, cyan, magenta);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
 }
-.change_btn:hover {
-  transform: scale(0, 9);
+.change-btn:hover {
+  background-image: linear-gradient(to right, magenta, cyan);
+  transform: scale(1.05);
+  transition: transform 0.3s ease;
 }
 h2.text-light {
-  font-size: 20px;
-  color: black;
+  font-size: 1.25rem;
+  color: #666;
   font-weight: 400;
 }
 </style>
