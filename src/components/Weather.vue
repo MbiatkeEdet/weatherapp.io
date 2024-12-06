@@ -121,7 +121,7 @@ export default {
 
 <style>
 body {
-  background-color: aqua;
+  background-color: none;
 }
 .weather-temp {
   margin: 0;
